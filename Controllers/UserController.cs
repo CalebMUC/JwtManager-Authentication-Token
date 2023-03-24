@@ -1,5 +1,6 @@
 ﻿using JwtManager_Authentication_Token.models;
 using JwtManager_Authentication_Token.Controllers;
+using JwtManager_Authentication_Token.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace JwtManager_Authentication_Token.Controllers
 {
@@ -15,17 +17,24 @@ namespace JwtManager_Authentication_Token.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private IConfiguration _config;
+
+        public UserController(IConfiguration config)
+        {
+            _config = config;
+        }
 
 
         [HttpGet("Admins")]
 
         [Authorize(Roles = "adminstrator")]
+        
         public IActionResult AdminsEndpoint()
         {
             
             var currentuser = GetCurrentUser();
 
-            return Ok($"hi {currentuser.UserName} you are an{currentuser.Role} ");
+            return Ok($"hi {currentuser.UserName} you are an {currentuser.Role} ");
         }
         [HttpGet("Users")]
         [Authorize(Roles = "user")]
@@ -33,7 +42,7 @@ namespace JwtManager_Authentication_Token.Controllers
         {
             var currentuser = GetCurrentUser();
 
-            return Ok($"hi {currentuser.UserName} you are an{currentuser.Role} ");
+            return Ok($"hi {currentuser.UserName} you are {currentuser.Role} ");
         }
         [HttpGet("publice")]
         public IActionResult publice()
@@ -44,22 +53,25 @@ namespace JwtManager_Authentication_Token.Controllers
         {
             //UserLogIn userLogIn = new UserLogIn();
 
-            //var user = UserAuthentication.Authenticate(userLogIn);
+            //var user = UserAuthentication.Authenticate(userLogIn);";
 
-            //var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkNhbGViIE11Y2hpcmkiLCJuYmYiOjE2Nzg4ODgxMDMsImV4cCI6MTY3ODg4OTkwMywiaWF0IjoxNjc4ODg4MTAzLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo0NDMzNC8iLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDMzNC8ifQ.BFEeN0QfCmjHyELTJpRYv1VeWXObpCmpoZHkfJw3SBw";
+            string Securitykey = _config["jwt:key"];
+            string ValidIssuer = _config["jwt:Issuer"];
+            string ValidAudience = _config["jwt:Audience"];
 
-            //var simplePrincipal = UserAuthentication.GetPrincipal(token);
+            var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkNhbGViIE11Y2hpcmkiLCJlbWFpbCI6Im11Y2hpcmljYWxlYjA1QGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbnN0cmF0b3IiLCJuYmYiOjE2NzkzMTQyNzksImV4cCI6MTY3OTMxNjA3OSwiaWF0IjoxNjc5MzE0Mjc5LCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo0NDMzNC8iLCJhdWQiOiJodHRwczovL2xvY2FsaG9zdDo0NDMzNC8ifQ.b4uAEpZZgkbFrEQoY3hwExZJbYROkKBjpGKT_2fRXuY";
+            var simplePrincipal = UserAuthentication.GetPrincipal(token,Securitykey,ValidIssuer,ValidAudience);
 
-        
 
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            var identity = simplePrincipal.Identity as ClaimsIdentity;
             if (identity != null)
             {
                 var userclaims = identity.Claims;
 
                 return new UserModel
                 {
-                    UserName = userclaims.FirstOrDefault(o => o.Type == ClaimTypes.NameIdentifier)?.Value,
+                    UserName = userclaims.FirstOrDefault(o => o.Type == ClaimTypes.Name)?.Value,
                     EmailAddress = userclaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value,
                     Role = userclaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value,
                     Password = userclaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value

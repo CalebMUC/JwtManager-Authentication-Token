@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+    using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,9 +28,13 @@ namespace JwtManager_Authentication_Token
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            services.AddAuthentication(options => { options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                
+                
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
@@ -47,6 +51,9 @@ namespace JwtManager_Authentication_Token
             );
             services.AddMvc();
             services.AddControllers();
+
+            
+           
             
         }
 
